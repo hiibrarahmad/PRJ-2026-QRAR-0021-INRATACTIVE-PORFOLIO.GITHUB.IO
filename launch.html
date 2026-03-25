@@ -36,18 +36,8 @@
   </div>
 
   <script>
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const prefersMarker = isIOS || !navigator.xr;
-
-    if (prefersMarker) {
-      window.location.replace("marker.html");
-    } else {
-      navigator.xr.isSessionSupported("immersive-ar").then((supported) => {
-        window.location.replace(supported ? "ar.html" : "marker.html");
-      }).catch(() => {
-        window.location.replace("marker.html");
-      });
-    }
+    // Default to marker mode for consistent camera access.
+    window.location.replace("marker.html");
   </script>
 </body>
 

@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; precision: medium" arjs="sourceType: webcam; debugUIEnabled: false;">
+  <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; precision: medium; antialias: true" arjs="sourceType: webcam; debugUIEnabled: false; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720;">
     <a-marker type="pattern" url="assets/qr-marker.patt">
       <a-entity id="panel" position="0 0.5 0" rotation="-90 0 0">
         <a-plane id="panel-bg" width="1.2" height="0.7" color="#0f1720" opacity="0.9" material="transparent: true"></a-plane>

@@ -133,6 +133,14 @@
         if (panelEntity) panelEntity.setAttribute("visible", false);
       });
     }
+
+    setTimeout(() => {
+      const video = document.querySelector("video");
+      if (!video || video.readyState < 2) {
+        statusEl.textContent = "Camera not active. Allow camera access and reload.";
+        if (permissionEl) permissionEl.style.display = "grid";
+      }
+    }, 4000);
   }
 
   updatePanel();

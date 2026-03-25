@@ -7,6 +7,21 @@ body, html {
   background: #0b0f14;
 }
 
+a-scene {
+  position: fixed !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0;
+}
+
+a-scene canvas,
+a-scene video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
 #overlay {
   position: fixed;
   inset: 0;

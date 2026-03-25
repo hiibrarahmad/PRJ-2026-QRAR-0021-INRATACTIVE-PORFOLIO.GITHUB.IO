@@ -37,7 +37,7 @@ This repository creates a shareable QR code that launches an interactive AR port
 ## How To Use
 
 1. Open the landing page and generate the QR code.
-2. Scan on mobile to launch AR (launch.html chooses the best mode).
+2. Scan on mobile to launch AR (launch.html defaults to Marker Mode for reliable camera access).
 3. Adjust transparency and scale, then browse projects.
 4. If WebXR is not supported, Marker Mode will load automatically.
 
