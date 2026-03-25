@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Launching AR?</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Sora", "Segoe UI", sans-serif;
+      background: #0b0f14;
+      color: #e7eef7;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      max-width: 520px;
+      text-align: center;
+      background: #0f1720;
+      border: 1px solid #223243;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+    }
+    a { color: #36c2a5; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>Launching AR?</h2>
+    <p>We?re selecting the best mode for your device.</p>
+    <p>If nothing happens, choose: <a href="ar.html">WebXR</a> or <a href="marker.html">Marker Mode</a>.</p>
+  </div>
+
+  <script>
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const prefersMarker = isIOS || !navigator.xr;
+
+    if (prefersMarker) {
+      window.location.replace("marker.html");
+    } else {
+      navigator.xr.isSessionSupported("immersive-ar").then((supported) => {
+        window.location.replace(supported ? "ar.html" : "marker.html");
+      }).catch(() => {
+        window.location.replace("marker.html");
+      });
+    }
+  </script>
+</body>
+
+</html>

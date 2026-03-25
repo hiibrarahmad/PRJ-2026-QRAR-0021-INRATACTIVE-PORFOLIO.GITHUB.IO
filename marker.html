@@ -17,7 +17,7 @@
   <div id="overlay">
     <div id="topbar" class="panel">
       <div class="badge">Marker AR Mode</div>
-      <div id="status" class="repo-meta">Point at the Hiro marker</div>
+      <div id="status" class="repo-meta">Point the camera at the QR marker</div>
       <div id="repo-title">Loading?</div>
       <div id="repo-desc" class="repo-meta"></div>
       <div id="repo-meta" class="repo-meta"></div>
@@ -46,13 +46,13 @@
         <button class="secondary" id="rotate-right">Rotate Right</button>
       </div>
       <div class="repo-meta">
-        Marker image: <a href="assets/hiro-marker.png" style="color:#36c2a5">Download</a>
+        Marker image: <a href="assets/qr-marker.png" style="color:#36c2a5">Download</a>
       </div>
     </div>
   </div>
 
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <a-marker preset="hiro">
+    <a-marker type="pattern" url="assets/qr-marker.patt">
       <a-entity id="panel" position="0 0.5 0" rotation="-90 0 0">
         <a-plane id="panel-bg" width="1.2" height="0.7" color="#0f1720" opacity="0.9" material="transparent: true"></a-plane>
         <a-text id="panel-title" value="Loading?" color="#e7eef7" align="center" width="1.2" position="0 0.18 0.01" wrap-count="22"></a-text>

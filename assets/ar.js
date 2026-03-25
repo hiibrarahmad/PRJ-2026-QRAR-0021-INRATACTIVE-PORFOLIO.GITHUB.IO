@@ -94,6 +94,21 @@
   } else {
     enterBtn.textContent = "Marker mode";
     enterBtn.disabled = true;
+    const marker = document.querySelector("a-marker");
+    const panelEntity = document.getElementById("panel");
+    if (panelEntity) {
+      panelEntity.setAttribute("visible", false);
+    }
+    if (marker) {
+      marker.addEventListener("markerFound", () => {
+        statusEl.textContent = "Marker detected";
+        if (panelEntity) panelEntity.setAttribute("visible", true);
+      });
+      marker.addEventListener("markerLost", () => {
+        statusEl.textContent = "Marker not in view";
+        if (panelEntity) panelEntity.setAttribute("visible", false);
+      });
+    }
   }
 
   updatePanel();

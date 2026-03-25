@@ -37,9 +37,9 @@
         in the air.
       </p>
       <div class="hero-actions">
-        <a class="button primary" href="ar.html">Launch AR</a>
+        <a class="button primary" href="launch.html">Launch AR</a>
         <a class="button secondary" href="marker.html">Marker Mode</a>
-        <a class="button secondary" href="assets/hiro-marker.png">Download Marker</a>
+        <a class="button secondary" href="assets/qr-marker.png">Download Marker</a>
       </div>
     </div>
 
@@ -53,6 +53,9 @@
         <button class="button secondary" id="qr-download">Download</button>
         <button class="button secondary" id="qr-copy">Copy Link</button>
       </div>
+      <p style="color: var(--muted); font-size: 0.85rem; margin: 0;">
+        Tip: the default QR also acts as the AR marker. If you change the URL, the marker will not match.
+      </p>
     </div>
   </section>
 
@@ -90,7 +93,7 @@
       </div>
       <div class="card">
         <h3>2. Enter AR</h3>
-        <span>Tap ?Enter AR.? Adjust transparency and scale.</span>
+        <span>Tap Enter AR. If you are in marker mode, point the camera at the QR marker.</span>
       </div>
       <div class="card">
         <h3>3. Explore repos</h3>
@@ -102,8 +105,11 @@
   <section class="section">
     <h2>Compatibility</h2>
     <p>
-      WebXR AR works best on Android Chrome. If AR isn?t supported, use Marker Mode.
-      The experience remains fully interactive in 2D as a fallback.
+      WebXR AR works best on Android Chrome. iPhone users are automatically routed to Marker Mode for camera access.
+      If AR is not supported, use Marker Mode.
+    </p>
+    <p style="color: var(--muted);">
+      Marker Mode shows the portfolio only while the QR marker is visible in the camera.
     </p>
   </section>
 
