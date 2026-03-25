@@ -4,7 +4,15 @@
   const generateBtn = document.getElementById("qr-generate");
   const downloadBtn = document.getElementById("qr-download");
   const copyBtn = document.getElementById("qr-copy");
-  const defaultUrl = `${window.location.origin}/ar.html`;
+  const deployedUrl =
+    "https://hiibrarahmad.github.io/PRJ-2026-QRAR-0021-INRATACTIVE-PORFOLIO.GITHUB.IO/ar.html";
+  const href = window.location.href || "";
+  const baseFromHref = href.replace(/index\.html.*$/i, "");
+  const origin = window.location.origin;
+  const defaultUrl =
+    origin && origin !== "null" && !/localhost|127\.0\.0\.1/i.test(origin)
+      ? `${baseFromHref}ar.html`
+      : deployedUrl;
 
   let qr;
 
