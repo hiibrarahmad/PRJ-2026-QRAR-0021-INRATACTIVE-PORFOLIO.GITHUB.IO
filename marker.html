@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QRAR Portfolio - Marker Mode</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/ar.css" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.2/aframe/build/aframe-ar.js"></script>
+</head>
+
+<body>
+  <div id="overlay">
+    <div id="topbar" class="panel">
+      <div class="badge">Marker AR Mode</div>
+      <div id="status" class="repo-meta">Point at the Hiro marker</div>
+      <div id="repo-title">Loading?</div>
+      <div id="repo-desc" class="repo-meta"></div>
+      <div id="repo-meta" class="repo-meta"></div>
+    </div>
+
+    <div id="controls" class="panel">
+      <div class="btn-row">
+        <button id="enter-ar" class="secondary">Marker mode</button>
+        <a href="index.html"><button type="button" class="secondary">Back</button></a>
+      </div>
+      <div class="slider">
+        <label>Transparency</label>
+        <input id="opacity" type="range" min="0.2" max="1" step="0.05" value="0.9" />
+      </div>
+      <div class="slider">
+        <label>Scale</label>
+        <input id="scale" type="range" min="0.5" max="1.8" step="0.1" value="1" />
+      </div>
+      <div class="btn-row">
+        <button class="secondary" id="prev">Prev</button>
+        <button class="secondary" id="next">Next</button>
+        <button class="secondary" id="open">Open Repo</button>
+      </div>
+      <div class="btn-row">
+        <button class="secondary" id="rotate-left">Rotate Left</button>
+        <button class="secondary" id="rotate-right">Rotate Right</button>
+      </div>
+      <div class="repo-meta">
+        Marker image: <a href="assets/hiro-marker.png" style="color:#36c2a5">Download</a>
+      </div>
+    </div>
+  </div>
+
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-marker preset="hiro">
+      <a-entity id="panel" position="0 0.5 0" rotation="-90 0 0">
+        <a-plane id="panel-bg" width="1.2" height="0.7" color="#0f1720" opacity="0.9" material="transparent: true"></a-plane>
+        <a-text id="panel-title" value="Loading?" color="#e7eef7" align="center" width="1.2" position="0 0.18 0.01" wrap-count="22"></a-text>
+        <a-text id="panel-desc" value="Fetching portfolio" color="#b6c4d4" align="center" width="1.1" position="0 0.0 0.01" wrap-count="40"></a-text>
+        <a-text id="panel-meta" value="" color="#36c2a5" align="center" width="1.1" position="0 -0.22 0.01" wrap-count="30"></a-text>
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    window.APP_MODE = "marker";
+  </script>
+  <script src="assets/ar.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QRAR Interactive Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+
+<body class="topmost">
+  <nav class="nav">
+    <div class="brand">
+      <div class="brand-badge">AR</div>
+      <div>
+        <div>QRAR 0021</div>
+        <small style="color: var(--muted);">Interactive Portfolio</small>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#qr">QR Generator</a>
+      <a href="#portfolio">GitHub</a>
+      <a href="#docs">Docs</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div>
+      <span class="badge">Hybrid AR + Live GitHub Cards</span>
+      <h1>Scan. Launch. Float your portfolio in AR.</h1>
+      <p>
+        This repo creates a shareable QR code that launches your live portfolio in AR. Visitors can
+        adjust transparency, cycle your GitHub projects, and interact with the experience directly
+        in the air.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="ar.html">Launch AR</a>
+        <a class="button secondary" href="marker.html">Marker Mode</a>
+        <a class="button secondary" href="assets/hiro-marker.png">Download Marker</a>
+      </div>
+    </div>
+
+    <div class="hero-card" id="qr">
+      <h3>Shareable QR Generator</h3>
+      <p style="color: var(--muted);">Use this QR to open the AR experience on mobile.</p>
+      <input id="qr-url" type="text" style="width:100%; padding:12px; border-radius:12px; border:1px solid #223243; background:#0b121a; color:#e7eef7;" />
+      <div class="qr-wrap" id="qr-target"></div>
+      <div class="qr-actions">
+        <button class="button primary" id="qr-generate">Generate</button>
+        <button class="button secondary" id="qr-download">Download</button>
+        <button class="button secondary" id="qr-copy">Copy Link</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Why this concept works</h2>
+    <p>Hybrid WebXR + marker AR means more devices can view the experience. The portfolio data stays live and always up to date.</p>
+    <div class="grid cols-3" style="margin-top:24px;">
+      <div class="card">
+        <h3>Markerless AR (WebXR)</h3>
+        <span>Best in-air effect on modern Android devices. Tap ?Launch AR.?</span>
+      </div>
+      <div class="card">
+        <h3>Marker Fallback</h3>
+        <span>Works on more devices using the Hiro marker. Use ?Marker Mode.?</span>
+      </div>
+      <div class="card">
+        <h3>Live GitHub Cards</h3>
+        <span>Fetches your latest repos in real time for always-fresh content.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="portfolio">
+    <h2>Live GitHub Portfolio</h2>
+    <p id="repo-status">Loading from GitHub?</p>
+    <div class="repo-grid" id="repo-grid"></div>
+  </section>
+
+  <section class="section" id="docs">
+    <h2>How to use</h2>
+    <div class="grid cols-3" style="margin-top:24px;">
+      <div class="card">
+        <h3>1. Scan the QR</h3>
+        <span>Open the AR experience in your mobile browser.</span>
+      </div>
+      <div class="card">
+        <h3>2. Enter AR</h3>
+        <span>Tap ?Enter AR.? Adjust transparency and scale.</span>
+      </div>
+      <div class="card">
+        <h3>3. Explore repos</h3>
+        <span>Cycle through projects and open GitHub links.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Compatibility</h2>
+    <p>
+      WebXR AR works best on Android Chrome. If AR isn?t supported, use Marker Mode.
+      The experience remains fully interactive in 2D as a fallback.
+    </p>
+  </section>
+
+  <footer class="footer">
+    <strong>PRJ-2026-QRAR-0021-INRATACTIVE-PORFOLIO</strong>
+    <span>Copyright 2026 Hibrar Ahmad (hiibrarahmad). All Rights Reserved.</span>
+  </footer>
+
+  <script src="assets/qrcode.min.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+
+</html>
