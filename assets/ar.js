@@ -99,6 +99,30 @@
     if (panelEntity) {
       panelEntity.setAttribute("visible", false);
     }
+    const permissionEl = document.getElementById("permission");
+    const enableBtn = document.getElementById("enable-camera");
+    const camRequested = new URLSearchParams(window.location.search).get("cam") === "1";
+    if (permissionEl) {
+      permissionEl.style.display = camRequested ? "none" : "grid";
+    }
+    if (enableBtn) {
+      enableBtn.addEventListener("click", async () => {
+        try {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("Camera API not available");
+          }
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+          stream.getTracks().forEach((t) => t.stop());
+          const nextUrl = `${window.location.pathname}?cam=1`;
+          window.location.replace(nextUrl);
+        } catch (err) {
+          if (permissionEl) {
+            permissionEl.querySelector("p").textContent =
+              "Camera permission was blocked. Please allow camera access in Safari settings and reload.";
+          }
+        }
+      });
+    }
     if (marker) {
       marker.addEventListener("markerFound", () => {
         statusEl.textContent = "Marker detected";
