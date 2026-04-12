@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Detection Diagnostic</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: monospace;
+      background: #000;
+      color: #0f0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .test {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #0f0;
+      background: rgba(0, 255, 0, 0.05);
+      border-radius: 4px;
+    }
+    .pass { color: #0f0; }
+    .fail { color: #f00; }
+    .info { color: #ff0; }
+    video { display: none; }
+    canvas { display: none; }
+    button {
+      display: block;
+      margin: 20px 0;
+      padding: 10px 20px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 QR Detection Diagnostic</h1>
+  <div id="output"></div>
+  <button onclick="runTests()">Run Diagnostics</button>
+  <button onclick="testCamera()">Test Camera Access</button>
+  <button onclick="testQRLibrary()">Test jsQR Library</button>
+  
+  <video id="diag-video" autoplay playsinline webkit-playsinline muted></video>
+  <canvas id="diag-canvas"></canvas>
+
+  <script>
+    const output = document.getElementById("output");
+    const video = document.getElementById("diag-video");
+    const canvas = document.getElementById("diag-canvas");
+
+    function log(msg, type = "info") {
+      const div = document.createElement("div");
+      div.className = `test ${type}`;
+      div.textContent = msg;
+      output.appendChild(div);
+      console.log(msg);
+    }
+
+    function runTests() {
+      output.innerHTML = "";
+      log("=== STARTING DIAGNOSTICS ===", "info");
+
+      // Test 1: Browser capabilities
+      log(`✓ Browser: ${navigator.userAgent.substring(0, 60)}...`, "pass");
+
+      // Test 2: MediaDevices API
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        log("✓ mediaDevices.getUserMedia available", "pass");
+      } else {
+        log("✗ mediaDevices.getUserMedia NOT available", "fail");
+        return;
+      }
+
+      // Test 3: Canvas support
+      if (canvas && canvas.getContext) {
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (ctx) {
+          log("✓ Canvas 2D context available", "pass");
+        } else {
+          log("✗ Canvas context failed", "fail");
+          return;
+        }
+      } else {
+        log("✗ Canvas not supported", "fail");
+        return;
+      }
+
+      // Test 4: jsQR library
+      if (typeof jsQR === "function") {
+        log("✓ jsQR library loaded", "pass");
+      } else {
+        log("⏳ jsQR not yet loaded (will load from CDN)", "info");
+      }
+
+      // Test 5: Basic QR detection
+      if (typeof jsQR === "function") {
+        testBasicDetection();
+      } else {
+        log("⏳ Waiting for jsQR to load...", "info");
+        setTimeout(() => {
+          if (typeof jsQR === "function") {
+            testBasicDetection();
+          } else {
+            log("✗ jsQR failed to load", "fail");
+          }
+        }, 3000);
+      }
+    }
+
+    function testBasicDetection() {
+      try {
+        // Create a simple test image (1x1 white pixel)
+        const testData = new Uint8ClampedArray(4);
+        testData[0] = 255; // R
+        testData[1] = 255; // G
+        testData[2] = 255; // B
+        testData[3] = 255; // A
+
+        const result = jsQR(testData, 1, 1, { inversionAttempts: "attemptBoth" });
+        log("✓ jsQR detects (no QR in test image, expected)", "pass");
+      } catch (e) {
+        log(`✗ jsQR error: ${e.message}`, "fail");
+      }
+    }
+
+    async function testCamera() {
+      output.innerHTML = "";
+      log("=== TESTING CAMERA ===", "info");
+
+      try {
+        log("📹 Requesting camera...", "info");
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment",
+            width: { ideal: 480 },
+            height: { ideal: 360 }
+          },
+          audio: false
+        });
+
+        log("✓ Camera stream obtained", "pass");
+        video.srcObject = stream;
+
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => {
+            log(`⚠️ Play failed: ${e.message}`, "fail");
+          });
+        }
+
+        let gotMetadata = false;
+        video.addEventListener("loadedmetadata", () => {
+          gotMetadata = true;
+          log(`✓ Video playing: ${video.videoWidth}x${video.videoHeight}`, "pass");
+        });
+
+        await new Promise(r => setTimeout(r, 2000));
+
+        if (!gotMetadata) {
+          log("⚠️ Metadata not received", "info");
+          log(`   Video element state: ready=${video.readyState}, width=${video.videoWidth}`, "info");
+        }
+
+        // Try to capture a frame
+        setTimeout(() => {
+          testFrameCapture();
+        }, 500);
+
+      } catch (err) {
+        log(`✗ Camera error: ${err.name}: ${err.message}`, "fail");
+      }
+    }
+
+    function testFrameCapture() {
+      try {
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        const w = video.videoWidth || 480;
+        const h = video.videoHeight || 360;
+
+        canvas.width = w;
+        canvas.height = h;
+
+        log(`📸 Capturing frame: ${w}x${h}`, "info");
+        ctx.drawImage(video, 0, 0, w, h);
+        log("✓ Frame captured to canvas", "pass");
+
+        // Try to read pixel data
+        const imageData = ctx.getImageData(0, 0, w, h);
+        log(`✓ Pixel data read: ${imageData.data.length} bytes`, "pass");
+
+        // Try QR detection on this frame
+        if (typeof jsQR === "function") {
+          const code = jsQR(imageData.data, w, h, { inversionAttempts: "attemptBoth" });
+          if (code) {
+            log(`✓ QR DETECTED: ${code.data}`, "pass");
+          } else {
+            log("ℹ️ No QR code found in frame (expected if not pointing at QR)", "info");
+          }
+        } else {
+          log("⏳ jsQR not available yet", "info");
+        }
+
+      } catch (err) {
+        log(`✗ Frame capture error: ${err.message}`, "fail");
+      }
+    }
+
+    async function testQRLibrary() {
+      output.innerHTML = "";
+      log("=== TESTING jsQR LIBRARY ===", "info");
+
+      if (typeof jsQR === "function") {
+        log("✓ jsQR is already loaded", "pass");
+      } else {
+        log("ℹ️ Checking if jsQR is defined globally...", "info");
+        for (let i = 0; i < 10; i++) {
+          await new Promise(r => setTimeout(r, 500));
+          if (typeof window.jsQR === "function") {
+            log(`✓ jsQR loaded after ${(i + 1) * 500}ms`, "pass");
+            break;
+          }
+          log(`   Attempt ${i + 1}/10...`, "info");
+        }
+      }
+
+      if (typeof jsQR !== "function") {
+        log("✗ jsQR failed to load from CDN", "fail");
+        return;
+      }
+
+      // Test with a known QR code (just data, not scanned from image)
+      log("Testing jsQR function directly...", "info");
+      try {
+        // This will return null but shouldn't error
+        const result = jsQR(new Uint8ClampedArray(100), 10, 10, { inversionAttempts: "attemptBoth" });
+        log("✓ jsQR function callable", "pass");
+      } catch (e) {
+        log(`✗ jsQR error: ${e.message}`, "fail");
+      }
+    }
+  </script>
+
+  <!-- Load jsQR from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+</body>
+</html>
