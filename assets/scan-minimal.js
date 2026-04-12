@@ -145,11 +145,11 @@ function startApp() {
       });
 
       console.log("Starting QR detection loop...");
-      statusEl.innerHTML = "📷 Point camera at QR code";
+      if (statusEl) statusEl.innerHTML = "📷 Point camera at QR code";
       scanFrame();
     } catch (err) {
       console.error("Camera error:", err);
-      statusEl.innerHTML = `❌ ${err.message}`;
+      if (statusEl) statusEl.innerHTML = `❌ ${err.message}`;
     }
   }
 
@@ -211,7 +211,7 @@ function startApp() {
         
         if (!qrDetected) {
           qrDetected = true;
-          statusEl.innerHTML = "✅ <b>QR Found!</b> Portfolio visible";
+          if (statusEl) statusEl.innerHTML = "✅ <b>QR Found!</b> Portfolio visible";
           showPortfolio(true);
           console.log("Portfolio shown");
         }
@@ -219,7 +219,7 @@ function startApp() {
       } else {
         if (qrDetected && (now - lastQrTime) > 1500) {
           qrDetected = false;
-          statusEl.innerHTML = "📷 Point camera at QR code";
+          if (statusEl) statusEl.innerHTML = "📷 Point camera at QR code";
           showPortfolio(false);
           console.log("Portfolio hidden");
         }
@@ -241,11 +241,11 @@ function startApp() {
       repos.length = 0;
       data.slice(0, 8).forEach((r) => repos.push(r));
       updatePanel();
-      statusEl.innerHTML = "✓ Ready! Now open camera";
+      if (statusEl) statusEl.innerHTML = "✓ Ready! Now open camera";
     })
     .catch((err) => {
       console.error("GitHub error:", err);
-      statusEl.innerHTML = "⚠️ GitHub data failed";
+      if (statusEl) statusEl.innerHTML = "⚠️ GitHub data failed";
     });
 
   // Start everything
