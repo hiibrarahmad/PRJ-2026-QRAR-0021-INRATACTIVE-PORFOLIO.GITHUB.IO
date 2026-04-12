@@ -127,24 +127,33 @@ function startApp() {
   // Test mode button
   const testModeBtn = document.getElementById("test-mode-btn");
   if (testModeBtn) {
-    testModeBtn.addEventListener("click", () => {
+    testModeBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Don't trigger body click
       testMode = !testMode;
       if (testMode) {
-        log("🧪 TEST MODE ENABLED - Click to simulate QR detection");
+        log("🧪 TEST MODE ENABLED - Click page to toggle QR");
         testModeBtn.style.background = "#f00";
-        // Allow clicking anywhere to simulate QR
-        document.addEventListener("click", simulateQRDetection);
+        testModeBtn.textContent = "TEST ON";
+        // Allow clicking on page to simulate QR
+        document.body.addEventListener("click", toggleTestQR);
       } else {
         log("🧪 Test mode disabled");
         testModeBtn.style.background = "#0f0";
-        document.removeEventListener("click", simulateQRDetection);
+        testModeBtn.textContent = "TEST MODE";
+        document.body.removeEventListener("click", toggleTestQR);
+        // Reset QR state
+        if (testQrActive) {
+          testQrActive = false;
+          qrDetected = false;
+          showPortfolio(false);
+        }
       }
     });
   }
 
-  function simulateQRDetection(e) {
+  function toggleTestQR(e) {
     if (!testMode) return;
-    if (e.target === testModeBtn) return; // Don't trigger on button
+    if (e.target.id === "test-mode-btn") return;
     
     testQrActive = !testQrActive;
     if (testQrActive) {
