@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Detection Test - Validation</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0a0f16;
+      color: #e7eef7;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .section {
+      background: #121c28;
+      border: 1px solid #36c2a5;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    h2 {
+      color: #36c2a5;
+      margin-top: 0;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 5px 0;
+    }
+    .pass {
+      background: #1a3a2a;
+      color: #4ade80;
+    }
+    .fail {
+      background: #3a1a1a;
+      color: #ef4444;
+    }
+    .pending {
+      background: #3a3a1a;
+      color: #eab308;
+    }
+    code {
+      background: #0a0f16;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>✓ QR Detection System - Validation Report</h1>
+  
+  <div class="section">
+    <h2>1. Library Availability Check</h2>
+    <div id="jsqr-check" class="status pending">Loading...</div>
+    <div id="github-check" class="status pending">Loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>2. DOM Elements Check</h2>
+    <div id="video-check" class="status pending">Video element...</div>
+    <div id="canvas-check" class="status pending">Canvas element...</div>
+    <div id="ui-check" class="status pending">UI elements...</div>
+  </div>
+
+  <div class="section">
+    <h2>3. Canvas Configuration</h2>
+    <div id="context-check" class="status pending">Canvas context...</div>
+    <div id="dimensions-check" class="status pending">Canvas dimensions...</div>
+  </div>
+
+  <div class="section">
+    <h2>4. Camera Functionality</h2>
+    <div id="camera-check" class="status pending">Camera access...</div>
+    <div id="video-play-check" class="status pending">Video playback...</div>
+    <div id="metadata-check" class="status pending">Metadata loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>5. QR Detection Test</h2>
+    <div id="qr-test" class="status pending">Waiting for QR code...</div>
+    <div id="qr-count" style="margin-top: 10px; color: #9fb0c3;">Scans completed: 0</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    const results = {};
+    let scanCount = 0;
+    let qrFoundCount = 0;
+
+    function updateStatus(id, status, message) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = `status ${status}`;
+      el.textContent = message;
+      results[id] = { status, message };
+    }
+
+    // 1. Library checks
+    setTimeout(() => {
+      if (typeof jsQR === 'function') {
+        updateStatus('jsqr-check', 'pass', '✓ jsQR library loaded from CDN');
+      } else {
+        updateStatus('jsqr-check', 'fail', '✗ jsQR library NOT loaded');
+      }
+    }, 500);
+
+    fetch('https://api.github.com/users/hiibrarahmad/repos?per_page=1')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          updateStatus('github-check', 'pass', `✓ GitHub API accessible (${data[0]?.name})`);
+        } else {
+          updateStatus('github-check', 'fail', '✗ GitHub API failed');
+        }
+      })
+      .catch(e => {
+        updateStatus('github-check', 'fail', `✗ GitHub API error: ${e.message}`);
+      });
+
+    // 2. DOM elements
+    const video = document.getElementById('camera-feed');
+    const canvas = document.getElementById('qr-canvas');
+    const statusEl = document.getElementById('status');
+    const topbar = document.getElementById('topbar');
+    const controls = document.getElementById('controls');
+
+    if (video) {
+      updateStatus('video-check', 'pass', '✓ Video element exists');
+    } else {
+      updateStatus('video-check', 'fail', '✗ Video element missing');
+    }
+
+    if (canvas) {
+      updateStatus('canvas-check', 'pass', '✓ Canvas element exists');
+    } else {
+      updateStatus('canvas-check', 'fail', '✗ Canvas element missing');
+    }
+
+    if (statusEl && topbar && controls) {
+      updateStatus('ui-check', 'pass', '✓ UI elements exist (status, topbar, controls)');
+    } else {
+      updateStatus('ui-check', 'fail', '✗ Some UI elements missing');
+    }
+
+    // 3. Canvas context
+    if (canvas) {
+      try {
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (ctx) {
+          updateStatus('context-check', 'pass', '✓ Canvas context created with willReadFrequently');
+        }
+      } catch (e) {
+        updateStatus('context-check', 'fail', `✗ Canvas context error: ${e.message}`);
+      }
+
+      if (canvas.width > 0 && canvas.height > 0) {
+        updateStatus('dimensions-check', 'pass', `✓ Canvas dimensions set: ${canvas.width}×${canvas.height}`);
+      } else {
+        updateStatus('dimensions-check', 'pending', 'Waiting for video dimensions...');
+      }
+    }
+
+    // 4. Camera access
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      updateStatus('camera-check', 'pending', 'Requesting camera access...');
+      
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      })
+        .then(stream => {
+          if (video) {
+            video.srcObject = stream;
+            updateStatus('camera-check', 'pass', '✓ Camera stream obtained');
+
+            // Try to play
+            video.play()
+              .then(() => {
+                updateStatus('video-play-check', 'pass', '✓ Video playback started');
+              })
+              .catch(e => {
+                updateStatus('video-play-check', 'fail', `✗ Video play error: ${e.message}`);
+              });
+
+            // Wait for metadata
+            const onMetadata = () => {
+              const dims = `${video.videoWidth}×${video.videoHeight}`;
+              updateStatus('metadata-check', 'pass', `✓ Video metadata loaded: ${dims}`);
+              
+              if (canvas) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                updateStatus('dimensions-check', 'pass', `✓ Canvas resized to: ${dims}`);
+              }
+
+              // Start QR detection test
+              startQRTest(video, canvas);
+            };
+
+            video.addEventListener('loadedmetadata', onMetadata);
+            setTimeout(() => {
+              if (video.videoWidth === 0) {
+                updateStatus('metadata-check', 'fail', '✗ Metadata timeout');
+              }
+            }, 5000);
+          }
+        })
+        .catch(e => {
+          updateStatus('camera-check', 'fail', `✗ Camera error: ${e.message}`);
+        });
+    } else {
+      updateStatus('camera-check', 'fail', '✗ getUserMedia not supported');
+    }
+
+    // 5. QR Detection test
+    function startQRTest(video, canvas) {
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      let testRunning = true;
+      
+      function testScan() {
+        if (!testRunning) return;
+        
+        if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+          requestAnimationFrame(testScan);
+          return;
+        }
+
+        try {
+          if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+          }
+
+          ctx.drawImage(video, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          
+          if (typeof jsQR === 'function') {
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: 'attemptBoth'
+            });
+
+            scanCount++;
+            
+            if (code && code.data) {
+              qrFoundCount++;
+              updateStatus('qr-test', 'pass', `✓ QR detected: ${code.data.substring(0, 50)}...`);
+              document.getElementById('qr-count').textContent = `QR codes found: ${qrFoundCount}/${scanCount} scans`;
+              testRunning = false; // Stop after first detection
+            } else {
+              document.getElementById('qr-count').textContent = `Scans completed: ${scanCount} (no QR yet - point camera at QR code)`;
+            }
+          }
+        } catch (e) {
+          updateStatus('qr-test', 'fail', `✗ Scan error: ${e.message}`);
+          testRunning = false;
+        }
+
+        requestAnimationFrame(testScan);
+      }
+
+      testScan();
+    }
+
+    // Summary
+    setTimeout(() => {
+      console.log('=== Validation Results ===');
+      console.table(results);
+    }, 2000);
+  </script>
+
+  <!-- These should be from marker.html -->
+  <video id="camera-feed" autoplay playsinline muted style="display:none;"></video>
+  <canvas id="qr-canvas" style="display:none;"></canvas>
+  <div id="overlay" style="display:none;">
+    <div id="status" style="display:none;">Test status</div>
+    <div id="topbar" style="display:none;">Test topbar</div>
+    <div id="controls" style="display:none;">Test controls</div>
+  </div>
+
+</body>
+</html>
