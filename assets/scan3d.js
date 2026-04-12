@@ -1,4 +1,13 @@
 (() => {
+  // Check if jsQR is available
+  if (typeof jsQR === "undefined") {
+    console.error("ERROR: jsQR library not loaded!");
+    alert("QR detection library failed to load. Please refresh the page.");
+    return;
+  }
+  
+  console.log("✓ jsQR library loaded");
+
   const videoFeed = document.getElementById("camera-feed");
   const canvas = document.getElementById("qr-canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -99,6 +108,8 @@
 
   async function startCamera() {
     try {
+      console.log("Requesting camera access...");
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
@@ -107,46 +118,89 @@
         },
         audio: false,
       });
+      
+      console.log("Camera stream obtained:", stream.active);
+      
       videoFeed.srcObject = stream;
+      videoFeed.play().catch(err => console.error("Video play error:", err));
+      
+      // Wait for video to be ready
       await new Promise(resolve => {
-        videoFeed.onloadedmetadata = resolve;
+        const onLoadedMetadata = () => {
+          console.log("Video metadata loaded, dimensions:", videoFeed.videoWidth, "x", videoFeed.videoHeight);
+          videoFeed.removeEventListener("loadedmetadata", onLoadedMetadata);
+          resolve();
+        };
+        videoFeed.addEventListener("loadedmetadata", onLoadedMetadata);
+        
+        // Fallback timeout in case event doesn't fire
+        setTimeout(() => {
+          console.log("Video ready (timeout)");
+          resolve();
+        }, 2000);
       });
+      
+      console.log("Starting QR scan...");
+      statusEl.innerHTML = "📷 <strong>Ready!</strong> Point camera at QR code";
       scanQrCodes();
     } catch (err) {
       console.error("Camera error:", err);
-      statusEl.textContent = "❌ Camera access denied";
-      repoTitle.textContent = "Please enable camera permissions";
+      statusEl.textContent = "❌ Camera access denied or not available";
+      repoTitle.textContent = "Check browser permissions";
       showUI(true);
     }
   }
 
   function scanQrCodes() {
-    if (videoFeed.readyState >= 2) {
-      canvas.width = videoFeed.videoWidth;
-      canvas.height = videoFeed.videoHeight;
-      ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
-      
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: "attemptBoth",
-      });
-
-      const now = Date.now();
-
-      if (code && code.data && code.data.includes(targetHint)) {
-        if (!qrDetected) {
-          qrDetected = true;
-          statusEl.innerHTML = "✅ <strong>QR Detected!</strong> Portfolio in view";
-          showUI(true);
+    try {
+      if (videoFeed.readyState >= 2) {
+        // Set canvas size to match video
+        canvas.width = videoFeed.videoWidth || 1280;
+        canvas.height = videoFeed.videoHeight || 720;
+        
+        if (canvas.width <= 0 || canvas.height <= 0) {
+          console.warn("Canvas size invalid:", canvas.width, canvas.height);
+          requestAnimationFrame(scanQrCodes);
+          return;
         }
-        lastQrTime = now;
-      } else {
-        if (qrDetected && (now - lastQrTime) > qrTimeout) {
-          qrDetected = false;
-          statusEl.innerHTML = "📷 <strong>Scan a QR code</strong> to load portfolio";
-          showUI(false);
+
+        // Draw video frame to canvas
+        ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+        
+        // Get image data from canvas
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        // Run QR detection
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "attemptBoth",
+        });
+
+        const now = Date.now();
+
+        // Detect ANY valid QR code (not just ones with specific marker text)
+        if (code && code.data) {
+          console.log("QR Code detected:", code.data);
+          
+          // Show portfolio when ANY QR is detected
+          if (!qrDetected) {
+            qrDetected = true;
+            statusEl.innerHTML = "✅ <strong>QR Detected!</strong> Portfolio in view";
+            showUI(true);
+            console.log("Portfolio shown");
+          }
+          lastQrTime = now;
+        } else {
+          // Hide portfolio after timeout when no QR in view
+          if (qrDetected && (now - lastQrTime) > qrTimeout) {
+            qrDetected = false;
+            statusEl.innerHTML = "📷 <strong>Point camera at QR code</strong>";
+            showUI(false);
+            console.log("Portfolio hidden - QR lost");
+          }
         }
       }
+    } catch (err) {
+      console.error("QR scan error:", err);
     }
     requestAnimationFrame(scanQrCodes);
   }
