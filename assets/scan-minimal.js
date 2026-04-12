@@ -29,6 +29,8 @@ function startApp() {
   let rotation = 0;
   let qrDetected = false;
   let lastQrTime = 0;
+  let testMode = false;
+  let testQrActive = false;
 
   // Debug logging
   function log(msg) {
@@ -122,6 +124,42 @@ function startApp() {
     window.location.href = "index.html";
   });
 
+  // Test mode button
+  const testModeBtn = document.getElementById("test-mode-btn");
+  if (testModeBtn) {
+    testModeBtn.addEventListener("click", () => {
+      testMode = !testMode;
+      if (testMode) {
+        log("🧪 TEST MODE ENABLED - Click to simulate QR detection");
+        testModeBtn.style.background = "#f00";
+        // Allow clicking anywhere to simulate QR
+        document.addEventListener("click", simulateQRDetection);
+      } else {
+        log("🧪 Test mode disabled");
+        testModeBtn.style.background = "#0f0";
+        document.removeEventListener("click", simulateQRDetection);
+      }
+    });
+  }
+
+  function simulateQRDetection(e) {
+    if (!testMode) return;
+    if (e.target === testModeBtn) return; // Don't trigger on button
+    
+    testQrActive = !testQrActive;
+    if (testQrActive) {
+      log("✅ TEST: QR FOUND (simulated)");
+      qrDetected = true;
+      if (statusEl) statusEl.innerHTML = "✅ <b>QR Found!</b> Portfolio visible (TEST)";
+      showPortfolio(true);
+    } else {
+      log("❌ TEST: QR Lost (simulated)");
+      qrDetected = false;
+      if (statusEl) statusEl.innerHTML = "📷 Point camera at QR code (TEST MODE)";
+      showPortfolio(false);
+    }
+  }
+
   // Start camera
   async function startCamera() {
     try {
@@ -173,6 +211,31 @@ function startApp() {
 
       log("▶️ Starting scan...");
       if (statusEl) statusEl.innerHTML = "📷 Point camera at QR code";
+      
+      // Wait for jsQR to be available
+      let jsQRReady = false;
+      if (typeof jsQR === "function") {
+        jsQRReady = true;
+        log("✓ jsQR available immediately");
+      } else {
+        log("⏳ Waiting for jsQR library...");
+        // Poll for jsQR
+        const waitForJsQR = setInterval(() => {
+          if (typeof jsQR === "function") {
+            clearInterval(waitForJsQR);
+            jsQRReady = true;
+            log("✓ jsQR loaded!");
+          }
+        }, 100);
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          if (!jsQRReady) {
+            clearInterval(waitForJsQR);
+            log("❌ jsQR failed to load from CDN!");
+          }
+        }, 5000);
+      }
+      
       scanFrame();
     } catch (err) {
       log(`❌ Camera fail: ${err.name || err.message}`);
@@ -241,7 +304,7 @@ function startApp() {
 
     // Check jsQR is available
     if (typeof jsQR !== "function") {
-      log("❌ jsQR not loaded!");
+      // jsQR not ready yet, skip this frame
       requestAnimationFrame(scanFrame);
       return;
     }
@@ -253,7 +316,7 @@ function startApp() {
         inversionAttempts: "attemptBoth",
       });
     } catch (e) {
-      log(`❌ jsQR error: ${e.message}`);
+      log(`⚠️ jsQR processing error: ${e.message}`);
       requestAnimationFrame(scanFrame);
       return;
     }
