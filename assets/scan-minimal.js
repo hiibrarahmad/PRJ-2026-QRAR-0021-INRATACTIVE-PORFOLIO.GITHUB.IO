@@ -1,7 +1,14 @@
-(() => {
+// Ensure DOM is ready, then start
+function startApp() {
   // Core setup
   const video = document.getElementById("camera-feed");
   const canvas = document.getElementById("qr-canvas");
+  
+  if (!video || !canvas) {
+    console.error("Required DOM elements missing");
+    return;
+  }
+  
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
   // UI elements
@@ -22,6 +29,7 @@
   // Sliders
   const opacitySlider = document.getElementById("opacity");
   const scaleSlider = document.getElementById("scale");
+  const distanceSlider = document.getElementById("distance");
 
   // Data
   const repos = [];
@@ -35,7 +43,7 @@
   // Check jsQR is available
   if (typeof jsQR !== "function") {
     console.error("jsQR library not loaded");
-    statusEl.innerHTML = "❌ QR library failed to load";
+    if (statusEl) statusEl.innerHTML = "❌ QR library failed to load";
     return;
   }
   console.log("✓ jsQR available");
@@ -234,4 +242,11 @@
   // Start everything
   updatePanel();
   startCamera();
-})();
+}
+
+// Start when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startApp);
+} else {
+  startApp();
+}
