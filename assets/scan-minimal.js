@@ -3,16 +3,42 @@ function startApp() {
   // Core setup
   const video = document.getElementById("camera-feed");
   const canvas = document.getElementById("qr-canvas");
+  const debugLog = document.getElementById("debug-log");
   
+  // Helper to log to console and debug panel
+  function debugMsg(msg) {
+    console.log(msg);
+    if (debugLog) {
+      const time = new Date().toLocaleTimeString();
+      debugLog.textContent += `[${time}] ${msg}\n`;
+      debugLog.parentElement.scrollTop = debugLog.parentElement.scrollHeight;
+    }
+  }
+
   if (!video || !canvas) {
+    debugMsg("❌ ERROR: Required DOM elements missing");
     console.error("Required DOM elements missing");
     return;
   }
+
+  debugMsg("✓ DOM elements found");
   
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) {
+    debugMsg("❌ ERROR: Failed to get canvas context");
     console.error("Failed to get canvas context");
     return;
+  }
+
+  debugMsg("✓ Canvas 2D context created");
+
+  // Verify jsQR is available
+  if (typeof jsQR !== "function") {
+    debugMsg("❌ ERROR: jsQR library not loaded");
+    console.error("jsQR library not loaded");
+    // Don't return - it might load still
+  } else {
+    debugMsg("✓ jsQR library loaded");
   }
 
   // UI elements
@@ -42,12 +68,7 @@ function startApp() {
   let qrDetected = false;
   let lastQrTime = 0;
 
-  console.log("=== QR Portfolio Initialized ===");
-  
-  // Check jsQR is available
-  if (typeof jsQR !== "function") {
-    console.error("jsQR library not loaded");
-    if (statusEl) statusEl.innerHTML = "❌ QR library failed to load";
+  debugMsg("=== QR Portfolio Initializing ===");
     return;
   }
   console.log("✓ jsQR available");
@@ -121,41 +142,66 @@ function startApp() {
   // Camera and QR scanning
   async function startCamera() {
     try {
-      console.log("Requesting camera access...");
+      debugMsg("📹 Requesting camera access...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
       });
-      console.log("✓ Camera stream obtained");
+      debugMsg("✓ Camera stream obtained");
 
       video.srcObject = stream;
       
       // Ensure video plays
-      video.play().catch(e => console.error("Play error:", e));
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          debugMsg(`⚠️ Play error: ${e.message}`);
+          console.error("Play error:", e);
+        });
+      }
 
       // Wait for metadata
       await new Promise((resolve) => {
         const onMetadata = () => {
-          console.log(`✓ Video dimensions: ${video.videoWidth}×${video.videoHeight}`);
+          const dims = `${video.videoWidth}×${video.videoHeight}`;
+          debugMsg(`✓ Video ready: ${dims}`);
+          console.log(`✓ Video dimensions: ${dims}`);
           video.removeEventListener("loadedmetadata", onMetadata);
           resolve();
         };
         video.addEventListener("loadedmetadata", onMetadata);
-        setTimeout(resolve, 3000); // Fallback
+        setTimeout(() => {
+          debugMsg("⚠️ Metadata timeout - starting anyway");
+          video.removeEventListener("loadedmetadata", onMetadata);
+          resolve();
+        }, 3000);
       });
 
+      debugMsg("▶️ Starting QR scan loop...");
       console.log("Starting QR detection loop...");
       if (statusEl) statusEl.innerHTML = "📷 Point camera at QR code";
       scanFrame();
     } catch (err) {
+      const msg = `❌ Camera error: ${err.name}: ${err.message}`;
+      debugMsg(msg);
       console.error("Camera error:", err);
-      if (statusEl) statusEl.innerHTML = `❌ ${err.message}`;
+      if (statusEl) statusEl.innerHTML = msg;
     }
   }
 
   // Main scanning loop
+  let frameCount = 0;
+  let lastDebugTime = 0;
   function scanFrame() {
     try {
+      frameCount++;
+      
+      // Log debug info every 30 frames (~1 sec at 30fps)
+      if (Date.now() - lastDebugTime > 1000) {
+        console.log(`[SCAN] Frame ${frameCount}, video ready: ${video.readyState}, dims: ${video.videoWidth}x${video.videoHeight}`);
+        lastDebugTime = Date.now();
+      }
+
       // Check video is playing
       if (video.readyState !== video.HAVE_ENOUGH_DATA) {
         requestAnimationFrame(scanFrame);
@@ -166,6 +212,7 @@ function startApp() {
       const w = video.videoWidth;
       const h = video.videoHeight;
       if (w <= 0 || h <= 0) {
+        console.warn(`[SCAN] Invalid video dimensions: ${w}x${h}`);
         requestAnimationFrame(scanFrame);
         return;
       }
@@ -177,7 +224,7 @@ function startApp() {
       try {
         ctx.drawImage(video, 0, 0, w, h);
       } catch (e) {
-        console.error("drawImage failed:", e);
+        console.error("[SCAN] drawImage failed:", e);
         requestAnimationFrame(scanFrame);
         return;
       }
@@ -187,7 +234,14 @@ function startApp() {
       try {
         imageData = ctx.getImageData(0, 0, w, h);
       } catch (e) {
-        console.error("getImageData failed:", e);
+        console.error("[SCAN] getImageData failed:", e);
+        requestAnimationFrame(scanFrame);
+        return;
+      }
+
+      // Verify jsQR exists
+      if (typeof jsQR !== "function") {
+        console.error("[SCAN] jsQR not loaded!");
         requestAnimationFrame(scanFrame);
         return;
       }
@@ -199,7 +253,7 @@ function startApp() {
           inversionAttempts: "attemptBoth",
         });
       } catch (e) {
-        console.error("jsQR error:", e);
+        console.error("[SCAN] jsQR error:", e);
         requestAnimationFrame(scanFrame);
         return;
       }
@@ -207,6 +261,7 @@ function startApp() {
       const now = Date.now();
 
       if (code && code.data) {
+        debugMsg(`✅ QR DETECTED: ${code.data.substring(0, 50)}`);
         console.log("✓ QR detected:", code.data);
         
         if (!qrDetected) {
