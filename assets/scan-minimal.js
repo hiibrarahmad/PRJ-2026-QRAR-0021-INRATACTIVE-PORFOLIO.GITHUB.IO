@@ -10,6 +10,10 @@ function startApp() {
   }
   
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) {
+    console.error("Failed to get canvas context");
+    return;
+  }
 
   // UI elements
   const statusEl = document.getElementById("status");
@@ -93,6 +97,11 @@ function startApp() {
   scaleSlider.addEventListener("input", (e) => {
     topbar.style.transform = `scale(${e.target.value})`;
     controls.style.transform = `scale(${e.target.value})`;
+  });
+
+  distanceSlider.addEventListener("input", (e) => {
+    // Distance slider can control z-position or other 3D properties if needed
+    // For now, it's available for future enhancement
   });
 
   zoomBtn.addEventListener("click", () => {
