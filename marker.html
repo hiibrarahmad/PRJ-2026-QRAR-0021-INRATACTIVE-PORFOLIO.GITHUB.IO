@@ -3,62 +3,219 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QRAR Portfolio - Scan Mode</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/ar.css" />
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>QRAR Portfolio - 3D AR Experience</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: "Sora", "Segoe UI", sans-serif;
+      color: #e7eef7;
+    }
+
+    a-scene {
+      width: 100%;
+      height: 100%;
+    }
+
+    #camera-feed {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      object-fit: cover;
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .panel {
+      pointer-events: auto;
+      background: rgba(10, 15, 22, 0.85);
+      border: 1px solid rgba(54, 194, 165, 0.4);
+      border-radius: 14px;
+      padding: 14px 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+    }
+
+    #topbar {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 25;
+      max-width: 50vw;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #36c2a5;
+      color: #0b0f14;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    #status, #repo-title, .repo-meta {
+      margin-top: 6px;
+    }
+
+    #status {
+      font-size: 13px;
+      color: #b6c4d4;
+    }
+
+    #repo-title {
+      font-weight: 700;
+      color: #e7eef7;
+      font-size: 16px;
+    }
+
+    .repo-meta {
+      font-size: 12px;
+      color: #9fb0c3;
+    }
+
+    #controls {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 25;
+      max-width: 420px;
+      max-height: 50vh;
+      overflow-y: auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    .slider {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #9fb0c3;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      pointer-events: auto;
+      background: #36c2a5;
+      color: #0b0f14;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: opacity 0.2s;
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+
+    button.secondary {
+      background: #121c28;
+      color: #e7eef7;
+      border: 1px solid #223243;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 600px) {
+      .panel {
+        padding: 12px 14px;
+        font-size: 13px;
+      }
+      
+      button {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <video id="camera" autoplay playsinline></video>
-  <canvas id="qr-canvas"></canvas>
+  <!-- Camera feed for background -->
+  <video id="camera-feed" autoplay playsinline muted></video>
 
-  <div id="permission" style="position:fixed; inset:0; background:#0b0f14; color:#e7eef7; display:grid; place-items:center; z-index:20;">
-    <div style="max-width:520px; padding:24px; border:1px solid #223243; border-radius:16px; background:#0f1720; text-align:center;">
-      <h2 style="margin-top:0;">Enable Camera</h2>
-      <p style="color:#9fb0c3;">Tap the button to allow camera access. Keep the QR marker visible to show the portfolio.</p>
-      <button id="enable-camera" style="margin-top:12px;">Enable Camera</button>
-      <p style="color:#9fb0c3; font-size:0.85rem; margin-top:16px;">QR marker: <a href="assets/qr-marker.png" style="color:#36c2a5">Download</a></p>
-    </div>
-  </div>
-
+  <!-- UI Overlay -->
   <div id="overlay">
     <div id="topbar" class="panel hidden">
-      <div class="badge">QR Scan Mode</div>
-      <div id="status" class="repo-meta">QR detected</div>
-      <div id="repo-title">Loading?</div>
-      <div id="repo-desc" class="repo-meta"></div>
-      <div id="repo-meta" class="repo-meta"></div>
+      <div class="badge">📍 3D AR Mode</div>
+      <div id="status">Position camera at QR code...</div>
+      <div id="repo-title">Loading portfolio...</div>
+      <div class="repo-meta" id="repo-meta"></div>
     </div>
 
     <div id="controls" class="panel hidden">
       <div class="slider">
         <label>Transparency</label>
-        <input id="opacity" type="range" min="0.2" max="1" step="0.05" value="0.9" />
+        <input id="opacity" type="range" min="0.2" max="1" step="0.05" value="0.85" />
       </div>
       <div class="slider">
         <label>Scale</label>
-        <input id="scale" type="range" min="0.6" max="1.2" step="0.05" value="1" />
+        <input id="scale" type="range" min="0.6" max="1.8" step="0.1" value="1" />
+      </div>
+      <div class="slider">
+        <label>Distance</label>
+        <input id="distance" type="range" min="0.5" max="3" step="0.1" value="1.2" />
       </div>
       <div class="btn-row">
-        <button class="secondary" id="prev">Prev</button>
-        <button class="secondary" id="next">Next</button>
-        <button class="secondary" id="open">Open Repo</button>
+        <button id="prev" class="secondary">← Prev</button>
+        <button id="next" class="secondary">Next →</button>
+        <button id="rotate" class="secondary">↻ Rotate</button>
       </div>
       <div class="btn-row">
-        <button class="secondary" id="rotate-left">Rotate Left</button>
-        <button class="secondary" id="rotate-right">Rotate Right</button>
-      </div>
-      <div class="repo-meta">
-        QR marker: <a href="assets/qr-marker.png" style="color:#36c2a5">Download</a>
+        <button id="open">🔗 GitHub</button>
+        <button id="zoom-in" class="secondary">+ View</button>
+        <button id="exit" class="secondary">✕ Exit</button>
       </div>
     </div>
   </div>
 
-  <script src="assets/scan.js"></script>
+  <!-- Canvas for QR detection -->
+  <canvas id="qr-canvas" style="display: none;"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="assets/scan3d.js"></script>
 </body>
 
 </html>
