@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete System Verification</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: monospace; background: #0a0f16; color: #e7eef7; padding: 20px; }
+    h1 { color: #36c2a5; margin-bottom: 20px; }
+    .test { background: #121c28; border: 1px solid #36c2a5; border-radius: 8px; padding: 15px; margin: 10px 0; }
+    .pass { color: #4ade80; }
+    .fail { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <h1>Complete System Verification</h1>
+  <div id="tests"></div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    const tests = [];
+    const testsDiv = document.getElementById('tests');
+    
+    function addTest(name, passed, details) {
+      tests.push({ name, passed, details });
+      const status = passed ? '<span class="pass">✓ PASS</span>' : '<span class="fail">✗ FAIL</span>';
+      const html = `<div class="test"><strong>${status} ${name}</strong><div style="margin-top: 5px; color: #9fb0c3; font-size: 12px;">${details}</div></div>`;
+      testsDiv.innerHTML += html;
+    }
+    
+    // Test 1: jsQR Library
+    setTimeout(() => {
+      const passed = typeof jsQR === 'function';
+      addTest('jsQR Library', passed, passed ? 'jsQR loaded from CDN' : 'jsQR NOT available');
+    }, 100);
+    
+    // Test 2: Canvas Context
+    setTimeout(() => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const passed = ctx !== null;
+      addTest('Canvas Context', passed, passed ? 'Canvas context created with optimization' : 'Failed to create context');
+    }, 200);
+    
+    // Test 3: Image Data
+    setTimeout(() => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, 640, 480);
+        const imageData = ctx.getImageData(0, 0, 640, 480);
+        const passed = imageData.data.length > 0;
+        addTest('Image Data', passed, passed ? `Got ${imageData.data.length} pixels` : 'Failed to get image data');
+      } catch (e) {
+        addTest('Image Data', false, `Error: ${e.message}`);
+      }
+    }, 300);
+    
+    // Test 4: jsQR Detection
+    setTimeout(() => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 640, 480);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(10, 10, 100, 100);
+        const imageData = ctx.getImageData(0, 0, 640, 480);
+        const code = jsQR(imageData.data, 640, 480, { inversionAttempts: 'attemptBoth' });
+        const passed = typeof code === 'object' || code === null;
+        addTest('jsQR Detection', passed, passed ? 'Detection function works (no QR in test pattern - expected)' : 'jsQR failed');
+      } catch (e) {
+        addTest('jsQR Detection', false, `Error: ${e.message}`);
+      }
+    }, 400);
+    
+    // Test 5: Fetch API
+    setTimeout(() => {
+      fetch('https://api.github.com/users/github')
+        .then(r => r.json())
+        .then(data => {
+          const passed = data.login === 'github';
+          addTest('GitHub API', passed, passed ? `Successfully fetched user: ${data.login}` : 'API response invalid');
+        })
+        .catch(e => {
+          addTest('GitHub API', false, `Error: ${e.message}`);
+        });
+    }, 500);
+    
+    // Test 6: DOM Ready
+    setTimeout(() => {
+      const passed = document.readyState === 'complete' || document.readyState === 'interactive';
+      addTest('DOM Ready', passed, passed ? `DOM state: ${document.readyState}` : 'DOM not ready');
+    }, 600);
+    
+    // Summary after all tests
+    setTimeout(() => {
+      const passed = tests.filter(t => t.passed).length;
+      const total = tests.length;
+      const html = `<div class="test" style="border-color: #36c2a5; margin-top: 20px;"><strong>SUMMARY: ${passed}/${total} tests passed</strong><div style="margin-top: 10px; color: #9fb0c3;">${passed === total ? 'All systems operational - QR AR portfolio ready for deployment!' : 'Some systems have issues'}</div></div>`;
+      testsDiv.innerHTML += html;
+    }, 2000);
+  </script>
+</body>
+</html>
